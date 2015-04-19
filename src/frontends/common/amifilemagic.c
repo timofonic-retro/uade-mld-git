@@ -106,6 +106,11 @@ static const char *offset_0000_patterns[] = {
   "YM!", "",                    /* stplay -- intentionally sabotaged */
   "ST1.2 ModuleINFO", "",       /* Startrekker AM .NT -- intentionally sabotaged */
   "AudioSculpture10", "",       /* Audiosculpture .AS -- intentionally sabotaged */
+  "MSXS", "MXP",		/* Music-X Player*/
+  "COMP", "NPP",		/* Nick Pelling Packer*/
+  "AN COOL", "TCB",		/* TCB Tracker*/
+  "TMK", "TMK",			/* TMK Format*/
+  "MSNG", "TPU",		/* TPU Format*/
   NULL, NULL
 };
 
@@ -125,6 +130,11 @@ static const char *offset_0024_patterns[] = {
   NULL, NULL
 };
 
+static const char *offset_0026_patterns[] = {
+  /* ID: Prefix: Desc: */
+    "JOSEPH", "RJ",		/* Richard Joseph (alt/ST)*/
+    NULL, NULL
+};
 
 /* check for 'pattern' in 'buf'.
    the 'pattern' must lie inside range [0, maxlen) in the buffer.
@@ -244,6 +254,25 @@ static int tfmxtest(unsigned char *buf, size_t bufsize, char *pre)
 	      }
 	    }
 	  }
+	}
+
+	s = 0x00000000;
+	e = read_be_u32(&buf[0x01d4]);
+	t = read_be_u32(&buf[0x01d8]);
+	if (t < bufsize-4) {
+	  if (t == 0x00000000) {
+	    /* unpacked */
+	    e = read_be_u32(&buf[0x000007fc]);	//direct end to instr. at 7fc (2044)
+	    t = 0x00000600;			//offset to offset of instr. at 600 (1536)	    
+	    }
+	   t =  read_be_u32(&buf[t]);		//real offset to instr data at buf[t]
+
+	    for (i =0; t < e && t < bufsize+4; t +=4) {
+	    if (buf [t] > 63) {
+	      strcpy(pre, "MDST");	/*TFMX ST */
+	      return 1;
+	      }
+	   }
 	}
       }
     }
@@ -849,7 +878,7 @@ void uade_filemagic(unsigned char *buf, size_t bufsize, char *pre,
 	     read_be_u32(&buf[0x24]) == 0x32004eb9 &&
 	     read_be_u16(&buf[0x2c])  == 0x4e75)	{
     strcpy(pre, "JPO");	/* Steve Turner*/
-        
+
   } else if (((buf[0] == 0x08 && buf[1] == 0xf9 && buf[2] == 0x00
 	       && buf[3] == 0x01) && (buf[4] == 0x00 && buf[5] == 0xbb
 				      && buf[6] == 0x41 && buf[7] == 0xfa)
@@ -984,7 +1013,8 @@ void uade_filemagic(unsigned char *buf, size_t bufsize, char *pre,
     /* generic ID Check at offset 0x24 */
 
   } else if (chk_id_offset(buf, bufsize, offset_0024_patterns, 0x24, pre)) {
-
+  } else if (chk_id_offset(buf, bufsize, offset_0026_patterns, 0x26, pre)) {
+    
     /* HIP7 ID Check at offset 0x04 */
   } else if (patterntest(buf, " **** Player by Jochen Hippel 1990 **** ",
 			 0x04, 40, bufsize)) {

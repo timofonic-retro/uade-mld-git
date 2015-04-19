@@ -160,7 +160,7 @@ int uade_analyze_eagleplayer(struct uade_detection_info *detectioninfo,
 	char *prefix;
 	char *postfix;
 	char *t;
-	unsigned char buf[8192];
+	unsigned char buf[16348];
 	size_t bufsize;
 
 	memset(detectioninfo, 0, sizeof *detectioninfo);
