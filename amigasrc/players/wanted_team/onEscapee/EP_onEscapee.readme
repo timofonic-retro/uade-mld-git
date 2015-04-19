@@ -1,11 +1,12 @@
 Short:        EaglePlayer "onEscapee" external player
 Author:       Wanted Team
 Uploader:     Don Adan <DonAdan@wp.pl>
-Version:      1
+Version:      2
 Type:         mus/play
+Replaces:     mus/play/onEscapee.lha
 Architecture: m68k-amigaos
 
-This is a new external "onEscapee" replay for EaglePlayer 1.54/2.00+.
+This is a new version of external "onEscapee" replay for EaglePlayer 1.54/2.00+.
 
 Version 1
 
@@ -17,10 +18,16 @@ Features:
 - LoadFast
 - Duration (+/- 1sec)
 
+Version 2
+
+- fixed init bug
+- removed Volume support
+- added pseudo 14-bit playback
+
 Notes:
 
 1. This player plays music files from "onEscapee" game.
 
 2. You can get the latest versions of Wanted Team products from:
 
-   http://amiga.emucamp.com/wt/wt.html
+   http://wt.exotica.org.uk
