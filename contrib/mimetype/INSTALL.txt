@@ -1,0 +1,15 @@
+Opendesktop Mimetype (audio/x-amiga)
+
+here you can find Filename patterns (aka Mimetype) for Amiga prefixes like mdat.*, mod.* and in case you renamed your files 
+for PC/Dos suffixes for easier association with a dedicated player like uade123.
+
+The mimetypes were tested with Dolphin/KDE4 but should work with any file manager following the opendesktop secification.
+
+
+Installation:
+if it doesn't already exits, create following folderstructure at in your home directory:
+$HOME/.local/share/mime/audio/
+
+copy the x-amiga.xml and x-amiga_pcsuffix to $HOME/.local/share/mime/audio/
+Restart your Desktop environment.
+
