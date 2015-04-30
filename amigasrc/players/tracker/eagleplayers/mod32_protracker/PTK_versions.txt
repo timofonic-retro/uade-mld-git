@@ -103,7 +103,7 @@ the way PTK1.0c sets the periods results in a rather flat sounding output
 loosing some of its effects.
 
 
-Accesing the Periodtable:
+Accessing the Periodtable:
 -------------------------
 Info: For the effects like portamento, finetune etc. the period table is
 accessed in getting the value by multiplying either 36*2. In some Protracker
