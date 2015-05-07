@@ -804,7 +804,7 @@ void uade_filemagic(unsigned char *buf, size_t bufsize, char *pre,
     {.e = MOD_AUDIOSCULPTURE4, .str = "MOD_ADSC4"},
     {.e = MOD_AUDIOSCULPTURE8, .str = "MOD_ADSC8"},
     {.e = MOD_PROTRACKER, .str = "MOD"},
-    {.e = MOD_FASTTRACKER, .str = "MOD_COMP"},
+    {.e = MOD_FASTTRACKER, .str = "MOD_FTK"},
     {.e = MOD_NOISETRACKER, .str = "MOD_NTKAMP"},
     {.e = MOD_PTK_COMPATIBLE, .str = "MOD_COMP"},
     {.e = MOD_SOUNDTRACKER24, .str = "MOD_DOC"},
@@ -848,7 +848,7 @@ void uade_filemagic(unsigned char *buf, size_t bufsize, char *pre,
 	  && buf[0x43b] == 'A') || (buf[0x438] == 'C' && buf[0x439] == 'D'
 				    && buf[0x43a] == '8'
 				    && buf[0x43b] == '1')) {
-    strcpy(pre, "MOD_PC");	/*Multichannel Tracker */
+    strcpy(pre, "MOD_4ch+");	/*Multichannel Tracker */
 
   } else if (buf[0x2c] == 'S' && buf[0x2d] == 'C' && buf[0x2e] == 'R'
 	     && buf[0x2f] == 'M') {
@@ -915,11 +915,9 @@ void uade_filemagic(unsigned char *buf, size_t bufsize, char *pre,
       }
     }
 
-  } else if (buf[0] == 0x60 && buf[1] == 0x00 &&
-	     buf[4] == 0x60 && buf[5] == 0x00 &&
-	     buf[8] == 0x60 && buf[9] == 0x00 &&
-	     buf[12] == 0x48 && buf[13] == 0xe7) {
-    strcpy(pre, "MA");		/*Music Assembler */
+  } else if ((patterntest(buf, "sa-team ", 0x16c, 8, bufsize))&&
+	     (patterntest(buf, "dyna", 0x234, 4, bufsize))){
+	      strcpy(pre, "MA");		/*Music Assembler */
 
   } else if (buf[0] == 0x00 && buf[1] == 0x00 &&
 	     buf[2] == 0x00 && buf[3] == 0x28 &&
