@@ -76,7 +76,6 @@ static const char *offset_0000_patterns[] = {
   "MMDC", "MMDC",		/* Med packer */
   "MSOB", "MSO",		/* Medley */
   "MODU", "NTP",		/* Novotrade */
-/* HIPPEL-ST CONFLICT: "COSO", "SOC",*/		/* Hippel Coso */
   "BeEp", "JAM",		/* Jamcracker */
   "ALL ", "DM1",		/* Deltamusic 1 */
   "YMST", "YM",			/* MYST ST-YM */
@@ -165,6 +164,47 @@ static int tronictest(unsigned char *buf, size_t bufsize)
     return 0;
 
   return 1;
+}
+
+static int hippeltest(unsigned char *buf, size_t bufsize, size_t realfilesize, char *pre)
+{
+      /* HIP7 ID Check at offset 0x04 */
+ if (patterntest(buf, " **** Player by Jochen Hippel 1990 **** ",
+			 0x04, 40, bufsize)) {
+    strcpy(pre, "S7G");	/* HIP7 */
+    return 1;
+ }
+      /* HIPPEL COSO ID Check at offset 0x00 */
+ if ((patterntest(buf, "COSO", 00, 4, bufsize)) &&
+	    (patterntest(buf, "TFMX", 32, 4, bufsize)) &&
+	      read_be_u16(&buf[48])  != 0x0000 &&
+	      read_be_u16(&buf[64])  != 0x0000 &&
+	      read_be_u32(&buf[28])  != 0x00000000 &&
+	      read_be_u32(&buf[28]) < realfilesize) {  
+	  strcpy(pre, "SOC");	/* Hippel Coso */  
+	  return 1;
+	      }
+      /* HIPPEL ST Check*/	      
+//  } else if ((patterntest(buf, "MMME", 00, 4, bufsize)) ||
+//	    (patterntest(buf, "TFMX", 00, 4, bufsize) && 
+//		    ((read_be_u16(&buf[4])  > 200) || (read_be_u16(&buf[16]) == 0x0000))) ||	    
+//	     (patterntest(buf, "COSO", 00, 4, bufsize) &&
+//	     (read_be_u16(&buf[48])  == 0x0000 || read_be_u16(&buf[24])  == 0x0000 || patterntest(buf, "MMME", 0x20, 4, bufsize)))) {
+//		      strcpy(pre, "HST");	/* Hippel ST (incomplete)*/ 
+
+    /* HIPPEL Check */
+/*  } else if ((buf[0] == 0x60 && buf[2] == 0x60 && buf[4] == 0x48
+	      && buf[5] == 0xe7) || (buf[0] == 0x60 && buf[2] == 0x60
+				     && buf[4] == 0x41 && buf[5] == 0xfa)
+	     || (buf[0] == 0x60 && buf[1] == 0x00 && buf[4] == 0x60
+		 && buf[5] == 0x00 && buf[8] == 0x48 && buf[9] == 0xe7)
+	     || (buf[0] == 0x60 && buf[1] == 0x00 && buf[4] == 0x60
+		 && buf[5] == 0x00 && buf[8] == 0x60 && buf[9] == 0x00
+		 && buf[12] == 0x60 && buf[13] == 0x00 && buf[16] == 0x48
+		 && buf[17] == 0xe7)) {*/
+//    strcpy(pre, "SOG");		/* Hippel */
+    
+  return 0;
 }
 
 static int tfmxtest(unsigned char *buf, size_t bufsize, char *pre)
@@ -854,17 +894,6 @@ void uade_filemagic(unsigned char *buf, size_t bufsize, char *pre,
 	     && buf[0x2f] == 'M') {
     strcpy(pre, "S3M");		/*Scream Tracker */
     
-  } else if ((buf[0] == 0x60 && buf[2] == 0x60 && buf[4] == 0x48
-	      && buf[5] == 0xe7) || (buf[0] == 0x60 && buf[2] == 0x60
-				     && buf[4] == 0x41 && buf[5] == 0xfa)
-	     || (buf[0] == 0x60 && buf[1] == 0x00 && buf[4] == 0x60
-		 && buf[5] == 0x00 && buf[8] == 0x48 && buf[9] == 0xe7)
-	     || (buf[0] == 0x60 && buf[1] == 0x00 && buf[4] == 0x60
-		 && buf[5] == 0x00 && buf[8] == 0x60 && buf[9] == 0x00
-		 && buf[12] == 0x60 && buf[13] == 0x00 && buf[16] == 0x48
-		 && buf[17] == 0xe7)) {
-    strcpy(pre, "SOG");		/* Hippel */
-    
   } else if (buf[0x348] == '.' && buf[0x349] == 'Z' && buf[0x34A] == 'A'
 	     && buf[0x34B] == 'D' && buf[0x34c] == 'S' && buf[0x34d] == '8'
 	     && buf[0x34e] == '9' && buf[0x34f] == '.') {
@@ -1013,10 +1042,6 @@ void uade_filemagic(unsigned char *buf, size_t bufsize, char *pre,
   } else if (chk_id_offset(buf, bufsize, offset_0024_patterns, 0x24, pre)) {
   } else if (chk_id_offset(buf, bufsize, offset_0026_patterns, 0x26, pre)) {
     
-    /* HIP7 ID Check at offset 0x04 */
-  } else if (patterntest(buf, " **** Player by Jochen Hippel 1990 **** ",
-			 0x04, 40, bufsize)) {
-    strcpy(pre, "S7G");	/* HIP7 */
 
     /* Magic ID at Offset 0x00 */
   } else if (buf[0] == 'M' && buf[1] == 'M' && buf[2] == 'D') {
@@ -1034,8 +1059,12 @@ void uade_filemagic(unsigned char *buf, size_t bufsize, char *pre,
 
     /* all TFMX format tests here */
   } else if (tfmxtest(buf, bufsize, pre)) {
-    /* is TFMX, nothing to do here ('pre' set in tfmxtest() */
+    /* is TFMX, TFMX-Pro, TFMX 7V or TFMX-ST nothing to do here ('pre' set in tfmxtest() */
 
+    /* hippel format tests here */
+  } else if (hippeltest(buf, bufsize, realfilesize, pre)) {
+    /* is HIPPEL, HIPPEL-COSO, HIPPEL 7V or Hippel-ST nothing to do here ('pre' set in hippeltest() */
+    
   } else if (buf[0] == 'T' && buf[1] == 'H' && buf[2] == 'X') {
     if ((buf[3] == 0x00) || (buf[3] == 0x01)) {
       strcpy(pre, "AHX");	/* AHX */
