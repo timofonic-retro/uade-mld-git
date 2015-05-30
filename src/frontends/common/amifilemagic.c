@@ -184,6 +184,38 @@ static int hippeltest(unsigned char *buf, size_t bufsize, size_t realfilesize, c
 	  strcpy(pre, "SOC");	/* Hippel Coso */  
 	  return 1;
 	      }
+
+	int s = 0, t =0;
+
+  /* Hippel MCMD Check */
+
+  if (read_be_u32(&buf[0x00])  == 0x48e7fffe)
+    {
+      if (buf[0x04] == 0x61) 
+	{
+	  s = buf[0x05];
+	  t = read_be_u16(&buf[0x0a+s]);
+	  if ((s+t+20+0xa)< bufsize)
+	    {
+	    if (read_be_u32(&buf[0x06+s])  == 0x2f006100 &&
+	      read_be_u16(&buf[0x0a+s+t]) == 0x41fa && read_be_u16(&buf[0x0a+s+t+18]) == 0x41fa)
+	      {
+		t=0x0a+s+t+20;
+		s=read_be_u16(&buf[t]);
+		if (s < bufsize)
+		 {
+		  if (patterntest(buf, "MCMD", t+s, 4, bufsize)) 
+		  {
+		    strcpy(pre, "SOG");	/* Hippel MCMD */  
+		    return 1;
+		  }
+		}
+	      }
+	    }
+	  }
+	}//no MCMD
+  
+
       /* HIPPEL ST Check*/	      
 //  } else if ((patterntest(buf, "MMME", 00, 4, bufsize)) ||
 //	    (patterntest(buf, "TFMX", 00, 4, bufsize) && 
@@ -658,8 +690,8 @@ static int mod15check(unsigned char *buf, size_t bufsize, size_t realfilesize,
   
   int max_pattern = 1;
   int pfx[32];
-  int pfxarg[32];
-
+  int pfxarg[32]; 
+  
   size_t calculated_size;
 
   /* sanity checks */
