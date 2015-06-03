@@ -525,7 +525,7 @@ static int mod32check(unsigned char *buf, size_t bufsize, size_t realfilesize,
       /* only spam filesize message when it's a tracker module */
 
     if (calculated_size != realfilesize) {
-      fprintf(stderr, "uade: file size is %zd but calculated size for a mod file is %zd (%s).\n", realfilesize, calculated_size, path);
+      fprintf(stderr, "uade: file size is %zd but calculated size for a mod file is %zd (%s). Bad rip?\n", realfilesize, calculated_size, path);
     }
 
     if (calculated_size > realfilesize) {
@@ -706,15 +706,17 @@ static int mod15check(unsigned char *buf, size_t bufsize, size_t realfilesize,
     return 0; /* modlentest failed */
 
   if (calculated_size != realfilesize) {
-      return 0 ;
+	fprintf(stderr, "uade: file size is %zd but calculated size for a mod file is %zd (%s). Bad rip? \n", realfilesize, calculated_size, path);
     }
 
+  if (calculated_size < realfilesize) {
+        fprintf(stderr, "uade: file has trailing garbage behind the actual module data. Please fix it. (%s)\n", path);
+    }
+    
   if (calculated_size > realfilesize) {
       fprintf(stderr, "uade: file is truncated and won't get played (%s)\n", path);
       return 0 ;
     }
-
-
 
   /* check for 15 instruments */
   if (buf[0x1d6] != 0x00 && buf[0x1d6] < 0x81 && buf[0x1f3] !=1) {
