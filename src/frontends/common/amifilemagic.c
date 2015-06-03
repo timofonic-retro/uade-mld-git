@@ -707,7 +707,8 @@ static int mod15check(unsigned char *buf, size_t bufsize, size_t realfilesize,
 
   if (calculated_size != realfilesize) {
 	fprintf(stderr, "uade: file size is %zd but calculated size for a mod file is %zd (%s). Bad rip? \n", realfilesize, calculated_size, path);
-    }
+      return 0 ;
+      }
 
   if (calculated_size < realfilesize) {
         fprintf(stderr, "uade: file has trailing garbage behind the actual module data. Please fix it. (%s)\n", path);
