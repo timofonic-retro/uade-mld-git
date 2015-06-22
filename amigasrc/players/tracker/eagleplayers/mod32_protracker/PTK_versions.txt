@@ -153,6 +153,9 @@ PTK1.0-2.3
 PTK3.0:
     supported    
 
+FYI: the pt2.3 editor is said to have (undocumented) support for 0xe8 effect,
+while the stand alone replay source code is missing it.
+
 
 do_retrig
 ---------
@@ -175,3 +178,24 @@ All PTK:
 
 Info: Noise/Soundtracker/Startrekker will sound broken when played as
 Protracker and using Portamento, so don't do it.
+
+
+Hardwarelimits:
+===============
+
+noteperiods beyond Hardware limit:
+-----------------------------------
+Mods saved with Fasttracker or other non Amiga Trackerprogramms, extended 
+noteperiods beyond the Hardwarelimit, thus can't be replayed like Amiga
+files.
+
+Furthermore some Mods from non Amigatrackers have a linear periodtable
+
+Panning:
+========
+Some PC-Trackers sport channel panning using the 8xy or EF8x command. This effect
+is not supported by the original protracker replay.
+
+
+Both limits can be addressed by using a software mixing routine, but will suffer
+from quality and/or performance loss.

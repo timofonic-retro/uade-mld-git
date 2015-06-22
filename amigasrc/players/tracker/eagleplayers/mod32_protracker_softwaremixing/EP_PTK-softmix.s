@@ -46,16 +46,12 @@ table	dc.l	DTP_PlayerName,ps3mname
 	dc.l	0
 uadename	dc.b	'uade.library',0
 ps3mcreator
-	dc.b	'Eagleplayer for Multichannel PC-Tracker files V0.3 (06.05.2015)',10,10
+	dc.b	'Eagleplayer for files of the ProTracker family exceeding amiga hardware limits or with other non standard features and thus needing software mixing for correct replaying (19.05.2015)',10,10
+	dc.b	'supports Mono(1), Stereo (2), Surround (3), Realsurround(4), 14bit(5) in config file',10
 	dc.b	'based on PS3M player 3.13 (c) by Jarno Paananen',10
-	dc.b	'Screamtracker 3 - (c) 93/94 Sami Tammilehto PSI/Future Crew',10
-	dc.b	'Fasttracker1 6/8 Channel - (c) Triton',10
-	dc.b	'Taketracker - (c) Vogue & Mr.H/Triton',10
-	dc.b	'Multitracker - D. Goldstein',10
-	dc.b	'Octalyser (CD81) Atari-ST Tracker',10,10
 	dc.b	'Adapted for UADE by shd and mld',0
 
-ps3mname	dc.b	'PS3M',0
+ps3mname	dc.b	'PTK-Softmix',0
 
 MName
 	ds.b	31
@@ -83,7 +79,7 @@ Check2	move.l	dtg_ChkData(a5),a0
 	bsr	CheckSong
 	rts
 
-cfgfile	dc.b	'ENV:EaglePlayer/EP-S3M.cfg',0
+cfgfile	dc.b	'ENV:EaglePlayer/EP-PTK-softmix.cfg',0
 	even
 cfgbuffer	ds.b	256
 
@@ -99,14 +95,6 @@ cfgbuffer	ds.b	256
 InitPlayer	push	all
 	move.l	dtg_AudioAlloc(a5),A0
 	jsr	(A0)
-
-	move.l	4.w,a6
-	lea	uadename,a1
-	moveq	#0,d0
-	jsr	_LVOOpenLibrary(a6)
-	move.l	d0,uadebase
-
-	bsr	uade_time_critical_on
 
 	move.l	dtg_DOSBase(a5),a6
 	move.l	#cfgfile,d1
@@ -128,7 +116,7 @@ InitPlayer	push	all
 
 	move.b	(a0)+,d0
 	cmp.b	#10,d0
-	bne.b	illegal_config_file
+	bne.w	illegal_config_file
 
 	moveq	#0,d0
 	moveq	#0,d1
@@ -157,6 +145,25 @@ volume_boost_l	move.b	(a0)+,d0
 	move.l	d1,volume_boost
 	moveq	#0,d7
 not_a_digit	dbf	d7,volume_boost_l
+
+runningonuade
+	move.b	(a0)+,d0
+	cmp.b	#10,d0
+	bne.b	illegal_config_file
+
+	move.b	(a0)+,d0
+	sub.b	#$30,d0
+	and.l	#$7,d0
+	cmp.b	#1,d0
+	bne	notrunningonuade	
+	move.l	4.w,a6
+	lea	uadename,a1
+	moveq	#0,d0
+	jsr	_LVOOpenLibrary(a6)
+	move.l	d0,uadebase
+
+	bsr	uade_time_critical_on
+notrunningonuade
 
 illegal_config_file
 	pull	all
@@ -253,17 +260,7 @@ uade_time_critical_on
 no_uade_1	pullr	d0
 	rts
 
-uade_time_critical_off
-	pushr	d0
-	move.l	uadebase,d0
-	beq.b	no_uade_2
-	push	all
-	move.l	d0,a6
-	moveq	#0,d0
-	jsr	-6(a6)
-	pull	all
-no_uade_2	pullr	d0
-	rts
+
 
 
 
@@ -283,10 +280,10 @@ no_uade_2	pullr	d0
 
 ;---- CIA Interrupt ----
 
-mtS3M = 1
+;mtS3M = 1
 mtMOD = 2
 mtMTM = 3
-mtXM = 4
+;mtXM = 4
 
 ENABLED = 0
 DISABLED = 1
@@ -613,16 +610,16 @@ play2:	lea	data,a5
 	bsr.w	domix
 
 .q
-	lea	data,a5
-	cmp.w	#mtS3M,mtype(a5)
-	bne	.xm
-	bsr	s3m_music
-	bra.b	.kool
-.xm
-	cmp.w	#mtXM,mtype(a5)
-	bne	.mod
-	bsr	xm_music
-	bra.b	.kool
+;	lea	data,a5
+;	cmp.w	#mtS3M,mtype(a5)
+;	bne	.xm
+;	bsr	s3m_music
+;	bra.b	.kool
+;.xm
+;	cmp.w	#mtXM,mtype(a5)
+;	bne	.mod
+;	bsr	xm_music
+;	bra.b	.kool
 
 .mod	bsr	mt_music
 
@@ -1117,7 +1114,7 @@ mix	moveq	#0,d7
 	tst.b	mLoop(a4)
 	bne.b	.q
 	st	mOnOff(a4)
-	bra.b	.qw
+	bra.w	.qw
 
 .2	cmp.l	#$ffff,d6
 	bls.b	.leii
@@ -1145,13 +1142,13 @@ mix	moveq	#0,d7
 	cmp	d6,d0
 	bhs.b	.ddwq
 	dbf	d7,.lep
-	bra.b	.qw
+	bra.w	.qw
 
 .ddwq	tst.b	mLoop(a4)
 	bne.b	.q
 	st	mOnOff(a4)
 	dbf	d7,.ty
-	bra.b	.qw
+	bra.w	.qw
 
 .q	move.l	mLStart(a4),a0
 	moveq	#0,d1
@@ -1329,7 +1326,7 @@ mix2	moveq	#0,d7
 	tst.b	mLoop(a4)
 	bne.b	.q
 	st	mOnOff(a4)
-	bra.b	.qw
+	bra.w	.qw
 
 .2	cmp.l	#$ffff,d6
 	bls.b	.leii
@@ -1357,13 +1354,13 @@ mix2	moveq	#0,d7
 	cmp	d6,d0
 	bhs.b	.ddwq
 	dbf	d7,.lep
-	bra.b	.qw
+	bra.w	.qw
 
 .ddwq	tst.b	mLoop(a4)
 	bne.b	.q
 	st	mOnOff(a4)
 	dbf	d7,.tyy
-	bra.b	.qw
+	bra.w	.qw
 
 .q	move.l	mLStart(a4),a0
 	moveq	#0,d1
@@ -1537,7 +1534,7 @@ mix16	moveq	#0,d7
 	tst.b	mLoop(a4)
 	bne.b	.q
 	st	mOnOff(a4)
-	bra.b	.qw
+	bra.w	.qw
 
 .2	cmp.l	#$ffff,d6
 	bls.b	.leii
@@ -1565,13 +1562,13 @@ mix16	moveq	#0,d7
 	cmp	d6,d0
 	bhs.b	.ddwq
 	dbf	d7,.lep
-	bra.b	.qw
+	bra.w	.qw
 
 .ddwq	tst.b	mLoop(a4)
 	bne.b	.q
 	st	mOnOff(a4)
 	dbf	d7,.ty
-	bra.b	.qw
+	bra.w	.qw
 
 .q	move.l	mLStart(a4),a0
 	moveq	#0,d1
@@ -1745,7 +1742,7 @@ mix162	moveq	#0,d7
 	tst.b	mLoop(a4)
 	bne.b	.q
 	st	mOnOff(a4)
-	bra.b	.qw
+	bra.w	.qw
 
 .2	cmp.l	#$ffff,d6
 	bls.b	.leii
@@ -1774,13 +1771,13 @@ mix162	moveq	#0,d7
 	cmp	d6,d0
 	bhs.b	.ddwq
 	dbf	d7,.lep
-	bra.b	.qw
+	bra.w	.qw
 
 .ddwq	tst.b	mLoop(a4)
 	bne.b	.q
 	st	mOnOff(a4)
 	dbf	d7,.tyy
-	bra.b	.qw
+	bra.w	.qw
 
 .q	move.l	mLStart(a4),a0
 	moveq	#0,d1
@@ -3602,15 +3599,15 @@ positioneita	dc	1
 timerhi		dc.b	0	;(BYTE) *
 timerlo		dc.b	0	;(BYTE) *
 whichtimer	dc.b	0	;(BYTE) *
-xmsign		dc.b	'Extended Module:'
+;xmsign		dc.b	'Extended Module:'
 
 dosname	dc.b	"dos.library",0
 	even
 dosbase	dc.l	0
 
-	incdir amiga:work/uade-2/amigasrc/players/ps3m/
+;	incdir amiga:work/uade-2/amigasrc/players/ps3m/
 	include chk_ps3m.s
-	include	ply_s3m.s
+;	include	ply_s3m.s
 	include	ply_mod.s
-	include	ply_xm.s
+;	include	ply_xm.s
 

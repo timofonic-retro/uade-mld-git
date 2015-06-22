@@ -396,14 +396,16 @@ static size_t modlentest(unsigned char *buf, size_t bufsize, size_t filesize,
 
 
 static void modparsing(unsigned char *buf, size_t bufsize, size_t header,
-		       int max_pattern, int pfx[], int pfxarg[])
+		       int max_pattern, int pfx[], int pfxarg[], int pnote[])
 {
   int offset;
-  int i, j, fx;
+  int i, j, fx, note;
   unsigned char fxarg;
   
+  pnote[0]=0;
+  
   for (i = 0; i < max_pattern; i++) {
-    for (j = 0; j < 256; j++) {
+    for (j = 0; j < (1024/4); j++) {
       offset = header + i * 1024 + j * 4;
 
       if ((offset + 4) > bufsize)
@@ -411,7 +413,13 @@ static void modparsing(unsigned char *buf, size_t bufsize, size_t header,
 
       fx = buf[offset + 2] & 0x0f;
       fxarg = buf[offset + 3];
-      
+      note = ((buf[offset] & 0x0f) * 256) + buf[offset+1];
+  	 if (note > 0 && (note < 113 || note > 856 ))
+	   {
+	    pnote[0] += 1;
+	    fprintf(stderr, "uade: protracker note period beyond HW limit: %4d: %x - %4d\n", pnote[0], offset, note );
+	   }
+
       if (fx == 0) {
 	if (fxarg != 0 )
 	  pfx[fx] += 1;
@@ -449,6 +457,7 @@ static int mod32check(unsigned char *buf, size_t bufsize, size_t realfilesize,
   int i, j, t, ret;
   int pfx[32];
   int pfxarg[32];
+  int pnote[1];
 
   /* instrument var */
   int vol, slen, srep, sreplen;
@@ -592,7 +601,8 @@ static int mod32check(unsigned char *buf, size_t bufsize, size_t realfilesize,
 
       memset (pfx, 0, sizeof (pfx));
       memset (pfxarg, 0, sizeof (pfxarg));
-      modparsing(buf, bufsize, S31_HEADER_LENGTH-4, max_pattern, pfx, pfxarg);
+      memset (pnote, 0, sizeof (pnote));
+      modparsing(buf, bufsize, S31_HEADER_LENGTH, max_pattern, pfx, pfxarg, pnote);
 
       /* and now for let's see if we can spot the mod */
 
@@ -603,10 +613,17 @@ static int mod32check(unsigned char *buf, size_t bufsize, size_t realfilesize,
       /* Protracker:			0,1,2,3,4,5,6,7   9,a,b,c,d,e,f	+e## */
       /* PC tracker:			0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f +e## */
 
+
+
+      if (pnote[0] > 0){
+	fprintf(stderr, "uade: file uses extended note periods and may sound bad!\n");
+	return MOD_FASTTRACKER; // M.K. but noteperiods are beyond HW limit. Most likely Fasttracker
+      }
+      
       for (j = 17; j <= 31; j++) {
 	if (pfx[j] != 0 || finetune_used >0) /* Extended fx used */ {
 	  if (buf[0x3b7] != 0x7f && buf[0x3b7] != 0x78) {
-	    return MOD_FASTTRACKER; /* Definetely Fasttracker*/
+	    return MOD_PTK_COMPATIBLE; /* Protracker compatible Fasttracker */
 	  } else {
 	    return MOD_PROTRACKER; /* Protracker*/
 	  }
@@ -624,14 +641,10 @@ static int mod32check(unsigned char *buf, size_t bufsize, size_t realfilesize,
       if ((buf[0x3b7] == 0) && 
 	  (has_slen_sreplen_zero >  has_slen_sreplen_one) &&
 	  (no_slen_sreplen_zero > no_slen_sreplen_one)){
-	if (pfx[0x10] == 0) {
+	if (pfx[0x10] == 0 && pnote[0] == 0) {
 	  /* probl. Fastracker or Protracker compatible */
 	  return MOD_PTK_COMPATIBLE;
 	}
-	  /* FIXME: Investigate
-	  else {
-	  return MOD_PROTRACKER; // probl. Protracker
-	  } */
       }
 	    
       if (pfx[0x05] != 0 || pfx[0x06] != 0 || pfx[0x07] != 0 ||
@@ -690,7 +703,8 @@ static int mod15check(unsigned char *buf, size_t bufsize, size_t realfilesize,
   
   int max_pattern = 1;
   int pfx[32];
-  int pfxarg[32]; 
+  int pfxarg[32];
+  int pnote[0];
   
   size_t calculated_size;
 
@@ -702,6 +716,7 @@ static int mod15check(unsigned char *buf, size_t bufsize, size_t realfilesize,
     return 0;
 
   calculated_size = modlentest(buf, bufsize, realfilesize, S15_HEADER_LENGTH);
+
   if (calculated_size == -1)
     return 0; /* modlentest failed */
 
@@ -729,7 +744,7 @@ static int mod15check(unsigned char *buf, size_t bufsize, size_t realfilesize,
   } else {
     return 0;
   }
-
+  
   /* parse instruments */
   for (i = 0; i < 15; i++) {
     vol = buf[45 + i * 30];
@@ -740,7 +755,7 @@ static int mod15check(unsigned char *buf, size_t bufsize, size_t realfilesize,
 
     if (vol > 64 && buf[44+i*30] != 0) return 0; /* vol and finetune */
 
-    if (slen == 0) {
+      if (slen == 0) {
 
       if (vol == 0)
 	noof_slen_zero_vol_zero++;
@@ -770,8 +785,9 @@ static int mod15check(unsigned char *buf, size_t bufsize, size_t realfilesize,
   /* parse pattern data -> fill pfx[] with number of times fx being used*/
   memset (pfx, 0, sizeof (pfx));
   memset (pfxarg, 0, sizeof (pfxarg));
-
-  modparsing(buf, bufsize, S15_HEADER_LENGTH, max_pattern, pfx, pfxarg);
+  memset (pnote, 0, sizeof (pnote));
+  
+  modparsing(buf, bufsize, S15_HEADER_LENGTH, max_pattern, pfx, pfxarg, pnote);
 
   /* and now for let's see if we can spot the mod */
 
@@ -781,6 +797,8 @@ static int mod15check(unsigned char *buf, size_t bufsize, size_t realfilesize,
 /* DOC-Soundtracker V2.2:	0,1,2,a,b,c,d,e,f */
 /* Soundtracker I-VI		0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f*/
 
+
+  if (pnote[0] > 0 ) return 0; // notes beyond the Amiga HW limit?
 
   /* Check for fx used between 0x3 <-> 0xb for some weird ST II-IV mods */ 
   for (j = 0x5; j < 0xa; j++) {

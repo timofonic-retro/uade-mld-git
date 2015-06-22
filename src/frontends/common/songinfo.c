@@ -489,8 +489,8 @@ static int process_module(char *credits, size_t credits_len,
 		   (strcasecmp(pre, "MOD_ADSC8") == 0) ||
 		   (strcasecmp(pre, "MOD_COMP") == 0) ||
 		   (strcasecmp(pre, "MOD_NTKAMP") == 0) ||
+		   (strcasecmp(pre, "MOD_FTK") == 0) ||
 		   (strcasecmp(pre, "PPK") == 0) ||
-		   (strcasecmp(pre, "MOD_PC") == 0) ||
 		   (strcasecmp(pre, "ICE") == 0) ||
 		   (strcasecmp(pre, "ADSC") == 0)) {
 		 /*MOD*/
