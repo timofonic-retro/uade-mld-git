@@ -1,0 +1,36 @@
+ Version 1.0
+ 
+ By examining the protracker replays following trackers seem to be related featurewise
+ to each other:
+ 
+ replays sources:
+ ----------------
+ 
+ pt1.0c --> pt1.1a --> pt1.1b --> pt1.1b_fixed --> pt2.1a --> pt2.3a || pt2.0b --> pt3.0b
+                                                                        \__same replay __/
+ \__________________________ no E8x effect _________________________/   \__ E8x effect __/
+
+ \______________ no Fxy set tempo _____________/  \________________ Fxy set tempo _______/
+ 
+ \____old EFx____/\________________________ new update funk _____________________________/
+
+ \_ 36/37 periods accessing _/   \__ 36/36 __/    \_36/37_/   \_________ 36/36 __________/
+ 
+ 
+             \________________________ Noisetracker vibrato _____________________________/
+ 
+
+ 
+ 
+ 
+ 
+tracker sources:
+----------------
+
+pt2.0a --> pt1.2 --> pt1.2e --> pt2.3d --> pt3.0b
+\__________________ E8x effect _________________/
+
+
+mld/uade team
+ 
+ 

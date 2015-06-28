@@ -9,7 +9,7 @@
 
 	PLAYERHEADER PlayerTagArray
 
-	dc.b '$VER: Protracker 3.0b player 2007-02-06',0
+	dc.b '$VER: Protracker 3.0b player 2015-06-25',0
 	even
 
 PlayerTagArray
@@ -266,14 +266,27 @@ query_eopts:
 	 move.b	#6,pt_vibshift
 	 move.w	#37*2,pt_oldstk		; apart from the different vibrato
 	 move.w	#36*2,pt_oldstk2	; pt10c uses a mixed up value
+	 st	pt_vblank		; Noisetracker setspeed only
 	 ;jsr	uade_debug
 	 bra.w 	.end			; for accessing the period table
 .ptk11b:
-	cmp.l	#"pt11",(a0)
-	bne.s	.end
-	 move.b	#PTK21,pt_ptk_type
+	cmp.l	#"pt11",(a0)		; pt11b has pt11b,pt23a,pt30b updatefunk
+	beq.s	.p11bok
+	cmp.l	#"p11b",(a0)
+	bne.s	.ptk11a
+.p11bok  move.b	#PTK21,pt_ptk_type	; hack: no special pt23/pt30 or pt10 features
 	 move.w	#37*2,pt_oldstk		; mixed value accesing the period
 	 move.w	#36*2,pt_oldstk2	; table...
+	 st	pt_vblank		; Noisetracker setspeed only
+	 ;jsr	uade_debug
+	 bra.w 	.end	 
+.ptk11a:
+	cmp.l	#"p11a",(a0)		; pt11a has pt10c update funk
+	bne.s	.end			; vibshift =7 
+	 move.b	#PTK10,pt_ptk_type	; pt1.0c funk
+	 move.w	#37*2,pt_oldstk		; mixed value accessing the period
+	 move.w	#36*2,pt_oldstk2	; table...
+	 st	pt_vblank		; Noisetracker setspeed only
 	 ;jsr	uade_debug
 .end
 	movem.l	(sp)+,d0-d7/a0-a6
@@ -661,11 +674,14 @@ notvisitedbefore
 		asl.l	#8,d1
 		asl.l	#2,d1
 		add.l	pt_patternposition(pc),d1
-		move.l	d1,pt_patternptr-pt_metspd(a4)
 		clr.w	pt_dmacontemp-pt_metspd(a4)
 		cmp.b	#PTK30,pt_ptk_type
+		bne.s	.pt11_plv
+		move.l	d1,pt_patternptr-pt_metspd(a4)
+.pt11_plv	cmp.b	#PTK30,pt_ptk_type
 		bne.s	.pt23_playvoices
 .pt30_playvoices
+
 		lea	$dff0a0,a5
 		lea	pt_audchan1temp(pc),a6
 		moveq	#1,d2
@@ -728,7 +744,7 @@ pt_quit:
 pt_playvoice:
 		tst.l	(a6)
 		bne.b	pt_plvskip
-		move.w	16(a6),6(a5)
+		move.w	16(a6),6(a5)		; bsr pernop == set period
 pt_plvskip:
 		move.l	(a0,d1.l),(a6)		; Read one track from pattern
 		bsr.b	pt_checkmetronome
@@ -799,7 +815,7 @@ rplen_ok	add.w	6(a3,d4.l),d0		; Add repeat length
 
 		cmp.b	#PTK30,pt_ptk_type
 		beq.s	pt_setregisters
-		 moveq	#0,d0			; ptk23 sets volume here
+		 moveq	#0,d0			; ptk23 and below sets volume here
 		 move.b	19(a6),d0
 		 move.w	d0,8(a5)
 		bra.b	pt_setregisters
@@ -816,7 +832,7 @@ pt_noloop:
 .ptk30vol	cmp.b	#PTK30,pt_ptk_type
 		beq.s	pt_setregisters
 		 moveq	#0,d0			; ptk23 sets volume here
-		 move.b	19(a6),d0
+		 move.b	19(a6),d0		; n_volume
 		 move.w	d0,8(a5)
 pt_setregisters:
 		move.w	(a6),d0
@@ -843,7 +859,7 @@ pt_chktoneporta:
 		bsr.b	pt_settoneporta
 		bra.b	pt_checkmoreeffects
 pt_setperiod:
-		;MOVEM.L	D0-D6/A0-A1,-(sp)
+		MOVEM.L	D0-D6/A0-A1,-(sp)
 		move.w	(a6),d6
 		andi.w	#$0fff,d6
 		lea	pt_periodtable(pc),a1
@@ -860,7 +876,7 @@ pt_ftufound:
 		mulu	pt_oldstk2,d6
 		adda.l	d6,a1
 		move.w	(a1,d0.w),16(a6)
-		;MOVEM.L	(sp)+,D0-D6/A0-A1
+		MOVEM.L	(sp)+,D0-D6/A0-A1
 
 		move.w	2(a6),d0
 		andi.w	#$0ff0,d0
@@ -973,7 +989,7 @@ pt_checkeffects:
 		 moveq	#0,d0
 		 move.b	19(a6),d0
 		 move.w	d0,8(a5)
-pt_gone:	rts
+pt_gone:		rts
 pt_chkefx2:
 		bsr.b	pt_updatefunk
 		move.w	2(a6),d0
@@ -1326,8 +1342,11 @@ pt_tremolook:
 		lsr.w	#2,d0
 		andi.w	#60,d0
 		add.b	d0,29(a6)
-		addq.l	#4,sp		; missing in 2.3a
-		rts
+		cmp.b	#PTK30,pt_ptk_type		; tst if ptk 1.0/2.3 or 3.0
+		bne.s 	.pt_tremo_go
+		addq.l	#4,sp				; missing in 2.3a
+.pt_tremo_go	rts
+
 pt_sampleoffset:
 		moveq	#0,d0
 		move.b	3(a6),d0
@@ -1458,9 +1477,9 @@ pt_checkmoreeffects:
 		cmpi.b	#12,d0
 		beq.w	pt_volumechange
 
-		cmp.b	#PTK10,pt_ptk_type	; Ptk 1.0c doesn't set period
-		beq.s	.end			; here.
-		move.w	16(a6),6(a5)
+		cmp.b	#PTK10,pt_ptk_type	; Ptk 1.0c and Ptk 1.1a doesn't set
+		beq.s	.end			; period here.
+		move.w	16(a6),6(a5)		; set pernop for 2.0, 2.3, 3.0
 .end		rts
 
 pt_ecommands:
@@ -1586,6 +1605,7 @@ pt_retrignote:
 		beq.b	pt_rtnend
 		move.l	pt_counter(pc),d7
 		bne.b	pt_rtnskp
+		move.w	(a6),d7
 		move.w	(a6),d7
 		andi.w	#$0fff,d7
 		bne.b	pt_rtnend

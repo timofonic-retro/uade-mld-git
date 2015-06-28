@@ -2,29 +2,36 @@ Differences/Compatibility issues between different Protracker replays.
 ######################################################################
 
 PTK1.0c = Protracker replay 1.0c by Lars "Zap" Hamre/Amiga Freelancers
+PTK1.1a = Protracker replay 1.0c by Lars "Zap" Hamre/Amiga Freelancers
 PTK1.1b = Protracker replay 1.1b by Lars "Zap" Hamre/Amiga Freelancers
 PTK2.1a	= Protracker replay 2.1a by Peter "CRAYON" Hanning / Mushrooms Studios
 PTK2.3a = Protracker replay 2.3a
 PTK3.0b = Protracker 3.00b Tom "Outland" Bech and Ivar "Heatseeker" J. Olsen
 (Protracker 2.0a Editor by Lars "Zap" Hamre/Amiga Freelancers...
- Interesting enough The replay code of the 2.0a editor has much more in common with 3.0b
- than with it's predecessors)
+ Interesting enough The replay code of the 2.0a editor has much more in common with 
+ 3.0b than with it's predecessors and the 2.0b replay is exactly the same, only the
+ version number differs :^)
 
 
 mt_* and pt_* are ususally the labels of the functions in the replays.
 
+Effect: Fxy -setspeed/settempo
+-------------------------------
+it seems the cia replay of PT1.0c, PT1.1a and PT1.1b only supports the noisetracker
+compatible setspeed settings. set Tempos are not handled.
+
 
 Effect EFx:
 -----------
-PTK1.0c:
+PTK1.0c & PTK1.1a:
     mt_UpdateFunk: -> Funk repeat effect 
 
 PTK1.1b and above
     mt_UpdateFunk: -> invert loop effect
 
 
-Info: Protracker 1.0c and below had a completely different effect, when
-effect 0xef was used. According to the replay it was called funk_repeat.
+Info: Protracker 1.1a & Protracker 1.0c and below had a completely different effect, 
+when effect 0xef was used. According to the replay it was called funk_repeat.
 
 Later Protrackers use invert loop for the 0xef effect. So songs
 using the effect will most likely sound screwed up, when played with the
@@ -61,11 +68,11 @@ Vibrato
 PTK1.0C:
     mt_vib_set:	-> lsr.w #6,d0
 
-PTK1.1b and above:
+PTK1.1a and above:
     mt_vib_set:	-> lsr.w #7,d0
 
 
-Info: Vibrato depth was changed for ptk1.1b to equal Noisetracker vibrato
+Info: Vibrato depth was changed for ptk1.1a to equal Noisetracker vibrato
 depth
 
 
@@ -74,12 +81,13 @@ PerNop:
 PTK1.0C:
     period is set in ->	mt_playvoice
 			mt_CheckEfx after "and" via "beq.s"
-			
+PTK1.1a:
+    period is set in ->	mt_playvoice
+			mt_CheckEfx after "and" via "beq.s"			
 PTK1.1b:
     period is set in ->	mt_playvoice
 			mt_CheckEfx after "and" via "beq.s"
 			mt_CheckMoreEfx
-
 PTK2.1a:
     period is set in ->	mt_playvoice
 			mt_CheckEfx after "and" via "beq.s"
@@ -90,13 +98,13 @@ PTK2.3a:
 			mt_CheckEfx after "and" via "beq.s"
 			mt_CheckMoreEfx
 
-PK3.0B:
+PTK3.0B:
     period is set in -> pt_playvoice
 			pt_CheckMoreEffects
     
 
 Info: while protracker 1.1b-2.3a update the periods when playing the voices,
-and while processing the effects/extended effects, ptk1.0c and ptk3.0b
+and while processing the effects/extended effects, ptk1.0c/1.1a and ptk2.0b/ptk3.0b
 only updates it twice.
 The effect is recognizable with emax_enjoythesilence.mod. E.g. using
 the way PTK1.0c sets the periods results in a rather flat sounding output
@@ -110,14 +118,14 @@ accessed in getting the value by multiplying either 36*2. In some Protracker
 this is completely screwed up...
 Some use 36*2 throughout the replay and some sometimes even both...
 
-PTK1.0C & PTK1.1b & PTK2.1a:
+PTK1.0C & PTK1.1a & PTK1.1b & PTK2.1a:
     36*2 for ftufound, Arpeggio3, TonePortaSetPer, GlissLoop
     37*2 for SetTonePorta, STPLoop
 
 PTK1.1b(fixed) & PTK2.3b:
     36*2 for all
         
-PTK3.0b:
+PTK3.0b & PTK2.0b:
     36*2 for all (37*2 for PTK3.0 with trailing zero in periodtable)
 
 
@@ -199,3 +207,6 @@ is not supported by the original protracker replay.
 
 Both limits can be addressed by using a software mixing routine, but will suffer
 from quality and/or performance loss.
+
+
+mld/uade team
