@@ -168,7 +168,9 @@ for opt in "$@" ; do
 	--n900)
 	        n900="yes"
 		;;
-
+	--play-all-mods)
+	        playpcmods="yes"
+		;;
 	--help)
 		echo
 		echo "Installation control:"
@@ -207,6 +209,9 @@ for opt in "$@" ; do
 		echo "Other:"
 		echo " --n900                 Set useful parameters for Nokia N900."
 		echo "                        This means 22050Hz frequency and mono sound."
+		echo " --play-all-mods        play all 4ch M.K mods from other platforms like pc,"
+		echo "                        atari-st, etc... with a replayer using emulated (!)"
+		echo "                        amiga software mixing. (31khz, 8bit, no_filter)"				
 		echo
 		echo "Library control:"
 		echo " --pkg-config=exe       Use 'exe' as pkg-config executable"
@@ -642,5 +647,12 @@ if test "$n900" = "yes" ; then
 
 panning 1
 frequency 22050
+EOF
+fi
+
+cp eagleplayer.conf.in eagleplayer.conf
+if test "$playpcmods" = "yes" ; then
+    cat >> eagleplayer.conf <<EOF
+PTK-softmix		prefixes=mod_ftk no_filter led_off
 EOF
 fi
