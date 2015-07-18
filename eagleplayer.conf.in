@@ -106,7 +106,7 @@ PTK-Prowiz		prefixes=mod_doc	epopt=type:st24	always_ends
 PTK-Prowiz		prefixes=mod15,mod15_mst	epopt=type:st20	always_ends
 PTK-Prowiz		prefixes=mod_ntk,mod_ntk1	epopt=type:nt10	always_ends
 PTK-Prowiz		prefixes=mod_ntk2	epopt=type:nt20	always_ends
-PTK-Prowiz		prefixes=mod_ntkamp	epopt=type:m&k.	always_ends
+NoiseTracker		prefixes=mod_ntkamp
 PTK-Prowiz		prefixes=mod_flt4	epopt=type:flt4	always_ends
 PTK-Prowiz		prefixes=mod		epopt=type:pt30	always_ends detect_format_by_content 
 PTK-Prowiz		prefixes=mod_comp	epopt=type:comp	always_ends

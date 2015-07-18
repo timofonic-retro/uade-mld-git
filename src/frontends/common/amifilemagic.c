@@ -414,7 +414,7 @@ static void modparsing(unsigned char *buf, size_t bufsize, size_t header,
       fx = buf[offset + 2] & 0x0f;
       fxarg = buf[offset + 3];
       note = ((buf[offset] & 0x0f) * 256) + buf[offset+1];
-  	 if (note > 0 && (note < 113 || note > 856 ))
+  	 if (note > 0 && !(note==1024) && (note < 113 || note > 856 )) // ignore 1024 in emax/swe pt11a mods 
 	   {
 	    pnote[0] += 1;
 	    fprintf(stderr, "uade: protracker note period beyond HW limit: %4d: %x - %4d\n", pnote[0], offset, note );
@@ -609,7 +609,7 @@ static int mod32check(unsigned char *buf, size_t bufsize, size_t realfilesize,
       /* FX used:					  		     */
       /* DOC Soundtracker 2.x(2.5):	0,1,2(3,4)	    a,b,c,d,e,f	     */
       /* Noisetracker 1.x:		0,1,2,3,4	    a,b,c,d,e,f      */
-      /* Noisetracker 2.x:		0,1,2,3,4           a,b,c,d,e,f      */
+      /* Noisetracker 2.x:		0,1,2,3,4,5,6       a,b,c,d,e,f      */
       /* Protracker:			0,1,2,3,4,5,6,7   9,a,b,c,d,e,f	+e## */
       /* PC tracker:			0,1,2,3,4,5,6,7,8,9,a,b,c,d,e,f +e## */
 
@@ -647,8 +647,7 @@ static int mod32check(unsigned char *buf, size_t bufsize, size_t realfilesize,
 	}
       }
 	    
-      if (pfx[0x05] != 0 || pfx[0x06] != 0 || pfx[0x07] != 0 ||
-	  pfx[0x09] != 0) {
+      if (pfx[0x07] != 0 || pfx[0x09] != 0) {
 	/* Protracker compatible */
 	return MOD_PTK_COMPATIBLE;
       }

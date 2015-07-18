@@ -1,5 +1,5 @@
-Differences/Compatibility issues between different Protracker replays.
-######################################################################
+Differences/Compatibility issues between different Protracker replays / 07-12-2015
+##################################################################################
 
 PTK1.0c = Protracker replay 1.0c by Lars "Zap" Hamre/Amiga Freelancers
 PTK1.1a = Protracker replay 1.0c by Lars "Zap" Hamre/Amiga Freelancers
@@ -7,18 +7,20 @@ PTK1.1b = Protracker replay 1.1b by Lars "Zap" Hamre/Amiga Freelancers
 PTK2.1a	= Protracker replay 2.1a by Peter "CRAYON" Hanning / Mushrooms Studios
 PTK2.3a = Protracker replay 2.3a
 PTK3.0b = Protracker 3.00b Tom "Outland" Bech and Ivar "Heatseeker" J. Olsen
-(Protracker 2.0a Editor by Lars "Zap" Hamre/Amiga Freelancers...
- Interesting enough The replay code of the 2.0a editor has much more in common with 
- 3.0b than with it's predecessors and the 2.0b replay is exactly the same, only the
- version number differs :^)
+
+Protracker 2.0a Editor by Lars "Zap" Hamre/Amiga Freelancers...
+ Interestingly enough the replay code of the 2.0a editor has much more in common
+ with standalone 3.0b replay. And the 2.0b replay is exactly the same, only the version
+ number differs. :^)
 
 
 mt_* and pt_* are ususally the labels of the functions in the replays.
 
 Effect: Fxy -setspeed/settempo
 -------------------------------
-it seems the cia replay of PT1.0c, PT1.1a and PT1.1b only supports the noisetracker
-compatible setspeed settings. set Tempos are not handled.
+it seems the cia replay of PT1.0c, PT1.1a only supports the noisetracker
+compatible setspeed settings. set Tempos are not handled. The fixed
+PT1.1b and above supported Tempos ootb.
 
 
 Effect EFx:
@@ -37,9 +39,11 @@ Later Protrackers use invert loop for the 0xef effect. So songs
 using the effect will most likely sound screwed up, when played with the
 wrong replay.
 
-For testing purposes dreamfish, check out dreamfish's MOD.miami vice. It
-uses "invert loop" and sounds broken with a PTK1.0c replay. Now we 
-need the "evil twin", a tune using funk repeat :-)
+For testing purposes check out dreamfish's MOD.miami vice. It uses "invert loop" and
+sounds broken with a PTK1.0c/1.1a replay. Another tune
+that's replayed differently by this is emax - delicate Oooz!.
+
+Now we need the "evil twin", a tune using funk repeat :-)
 
 
 Effect ED0:
@@ -127,6 +131,8 @@ PTK1.1b(fixed) & PTK2.3b:
         
 PTK3.0b & PTK2.0b:
     36*2 for all (37*2 for PTK3.0 with trailing zero in periodtable)
+    
+A good test for the effect is doh's mod.poseidon.
 
 
 mt_UpdateFunk in CheckMoreEfx:
@@ -176,16 +182,71 @@ PTK3.0 sets sample number in PLVSKIP (play voice skip), while PTK2.3
 doesn't.
 
 
+pt_settoneporta:
+----------------
+the Protracker1.1b_fixed/Parasite/Shadestracker replay add the multiplied
+parameter as word when accessing the periodtable, all other add it as
+longword.
+
 
 Portamento:
 -----------
-All PTK:
+All PTK replays (not editor!):
     very first portamento up/down effect call is ignored due to unintialised
     value. This is breaking e.g. Mod.Poseidon by uncle tom, when played
     as the very first song after starting the Tracker.
 
 Info: Noise/Soundtracker/Startrekker will sound broken when played as
 Protracker and using Portamento, so don't do it.
+
+
+Editors:
+========
+
+general:
+--------
+The Protracker 2.0b/3.0b standalone replay and the Protracker 2.0a editor replay 
+routine are basically the same  (apart from Editor specific features like VUs) 
+so differences between all Editors are compared against this version.
+
+
+PT-2.3d check_metronom:
+-------------------------
+The PTK2.3d Editor has a sligthly more expensive check_metronom routine compared to 
+PT 2.0a editor or the 2.0b/3.0b replay, apart from that it's the same..
+
+
+PT-3.15 afterplay_voice checkmore effect in pt_sdmask& Volumecheck in pt_setregisters:
+--------------------------------------------------------------------------------------
+Instead of calling checkmoreffects in pt_sdmaskp, like all predecessors, PT3.15
+editor uses a shorter second version called afterplay_voice_cme checking for
+pt_positionjump, pt_patternbreak, pt_ecommands,  pt_setspeed effect, and the
+set_pernop is missing. Furthermore it checks for the volume effect in pt_setregisters.
+
+The effect was described in a Mail by Martin Willers <M.Willers@tu-bs.de>
+to Claudio Matsuoka of xmp module player in his Tracker differences for Coders in 
+Section 6.Effect 9 quirks:
+
+"[...]
+  Original Protracker-source has some bug in handling effect 09, in that
+  the sample offset given in the effect byte is added +twice+ to the current
+  sample offset, once before playing this instrument (as is expected), and
+  once again after this instrument has been played! So, if on the same channel
+  the same instrument is played again without resetting the instrument's
+  parameters (eg. when just a note period is specified, but not the instrument
+  number again? or the other way round? :), the offset is twice as high
+  as one would expect.
+  This can be heard very easy eg. in the (very popular) song "No Mercy" by
+  Alf/VTL, Position #2-#3 in the sequence.
+
+
+	PT23	: kay - ay - ay - okay		<= buggy
+	PT315	: kay - kay - kay - okay
+"
+
+It seems the bugfix was a side effect when porting the dyn12bit sample system and new
+interrupt handling, resulting in the different afterplay_voice_cme/checkmoreeffects
+behaviour in PT3.15.
 
 
 Hardwarelimits:
@@ -201,7 +262,7 @@ Furthermore some Mods from non Amigatrackers have a linear periodtable
 
 Panning:
 ========
-Some PC-Trackers sport channel panning using the 8xy or EF8x command. This effect
+Some PC-Trackers sport channel panning using the 8xy (EF8x?) command. This effect
 is not supported by the original protracker replay.
 
 
